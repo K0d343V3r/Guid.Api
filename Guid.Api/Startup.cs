@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Api.Common.Cache;
 using Guid.Api.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -41,7 +42,13 @@ namespace Guid.Api
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             // add dependency injected data services
+            services.AddScoped<IEntityCache<GuidInfoEntity>, RedisEntityCache<GuidInfoEntity>>();
             services.AddScoped<IGuidRepositoryContext, GuidRepositoryContext>();
+
+            services.AddDistributedRedisCache(options =>
+            {
+                options.Configuration = "localhost:6379"; //location of redis server
+            });
 
             // Add OpenAPI/Swagger document
             services.AddSwaggerDocument(); // registers a Swagger v2.0 document with the name "v1" (default)

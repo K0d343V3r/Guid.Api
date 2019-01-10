@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Api.Common.Cache;
 using Guid.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Guid.Api.Controllers
 {
@@ -11,12 +13,16 @@ namespace Guid.Api.Controllers
     [ApiController]
     public class GuidInfosController : ControllerBase
     {
-        private IGuidRepositoryContext _context;
-        private static readonly int _expireDays = 30;
+        private readonly IGuidRepositoryContext _context;
+        private readonly IEntityCache<GuidInfoEntity> _cache;
 
-        public GuidInfosController(IGuidRepositoryContext context)
+        private static readonly int _expireDays = 30;
+        private static readonly string _cachePrefix = "guidinfo";
+
+        public GuidInfosController(IGuidRepositoryContext context, IEntityCache<GuidInfoEntity> cache)
         {
             _context = context;
+            _cache = cache;
         }
 
         [HttpGet("{id}", Name = "GetGuidInfo")]
@@ -28,18 +34,39 @@ namespace Guid.Api.Controllers
             }
             else
             {
-                var infos = await _context.GuidInfos.GetAsync(i => i.Guid == guid);
-                if (!infos.Any())
+                // try cache first
+                var info = await _cache.GetEntityAsync(_cachePrefix, guid.ToString());
+                if (info != null)
                 {
-                    return NotFound();
+                    // return cached entity
+                    return info.ToGuidInfo();
                 }
-                else if (infos[0].Expire < DateTime.UtcNow)
+                else
                 {
-                    // 410 = Gone
-                    return StatusCode(410);
-                }
+                    // not cached, get it from database
+                    var infos = await _context.GuidInfos.GetAsync(i => i.Guid == guid);
+                    if (!infos.Any())
+                    {
+                        // entity does not exist
+                        return NotFound();
+                    }
+                    else if (infos[0].Expire >= DateTime.UtcNow)
+                    {
+                        // entity has not expired, cache it
+                        await _cache.SetEntityAsync(_cachePrefix, guid.ToString(), infos[0]);
 
-                return infos[0].ToGuidInfo();
+                        // and return it
+                        return infos[0].ToGuidInfo();
+                    }
+                    else
+                    {
+                        // entity has expired, remove it from cache
+                        await InvalidateCache(guid);
+
+                        // 410 = Gone
+                        return StatusCode(410);
+                    }
+                }
             }
         }
 
@@ -89,7 +116,10 @@ namespace Guid.Api.Controllers
                 }
                 else
                 {
-                    // guid info found, update meta data
+                    // remove from cache
+                    await InvalidateCache(guid);
+
+                    // guid info found, update database
                     infos[0].UpdateFrom(info);
                     _context.GuidInfos.Update(infos[0]);
                     await _context.SaveChangesAsync();
@@ -115,12 +145,21 @@ namespace Guid.Api.Controllers
                 }
                 else
                 {
+                    // remove from cache
+                    await InvalidateCache(guid);
+
+                    // remove from database
                     _context.GuidInfos.Delete(infos[0]);
                     await _context.SaveChangesAsync();
 
                     return Ok();
                 }
             } 
+        }
+
+        private async Task InvalidateCache(System.Guid guid)
+        {
+            await _cache.InvalidateEntityAsync(_cachePrefix, guid.ToString());
         }
     }
 }
