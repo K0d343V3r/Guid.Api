@@ -46,7 +46,7 @@ namespace Guid.Api.Models
             return new GuidInfo()
             {
                 Guid = Guid.ToString("N").ToUpper(),
-                Expire = Expire,
+                Expire = new DateTime(Expire.Ticks, DateTimeKind.Utc),
                 User = User
             };
         }
