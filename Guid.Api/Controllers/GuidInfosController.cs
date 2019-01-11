@@ -46,7 +46,6 @@ namespace Guid.Api.Controllers
         [HttpGet("{id}", Name = "GetGuidInfo")]
         [ProducesResponseType(typeof(GuidInfo), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(GuidApiError), (int)HttpStatusCode.NotFound)]
-        [ProducesResponseType(typeof(GuidApiError), (int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(GuidApiError), (int)HttpStatusCode.Gone)]
         public async Task<ActionResult<GuidInfo>> GetGuidInfoAsync(System.Guid id)
         {
@@ -54,34 +53,49 @@ namespace Guid.Api.Controllers
             var info = await _cache.GetEntityAsync(_cachePrefix, id.ToString());
             if (info != null)
             {
-                // return cached entity
-                return info.ToGuidInfo();
+                return await ProcessGuidInfo(info, true);
             }
             else
             {
-                // not cached, get it from database
+                // not cached, try from database
                 var infos = await _context.GuidInfos.GetAsync(i => i.Guid == id);
                 if (!infos.Any())
                 {
-                    // entity does not exist
                     return NotFound(new GuidApiError(GuidErrorCode.GuidNotFound));
-                }
-                else if (infos[0].Expire >= _clock.UtcNow)
-                {
-                    // entity has not expired, cache it
-                    await _cache.SetEntityAsync(_cachePrefix, id.ToString(), infos[0]);
-
-                    // and return it
-                    return infos[0].ToGuidInfo();
                 }
                 else
                 {
-                    // entity has expired, remove it from cache
-                    await InvalidateCache(id);
-
-                    // Gone = 410
-                    return StatusCode((int)HttpStatusCode.Gone, new GuidApiError(GuidErrorCode.GuidExpired));
+                    return await ProcessGuidInfo(infos[0], false);
                 }
+            }
+        }
+
+        private async Task<ActionResult<GuidInfo>> ProcessGuidInfo(GuidInfoEntity info, bool fromCache)
+        {
+            if (info.Expire < _clock.UtcNow)
+            {
+                // retrieved info has expired
+                if (fromCache)
+                {
+                    // remove it from cache
+                    await InvalidateCache(info.Guid);
+                }
+
+                // and return 410 code (Gone)
+                return StatusCode((int)HttpStatusCode.Gone, new GuidApiError(GuidErrorCode.GuidExpired));
+            }
+            else
+            {
+                // this is a valid (not expired) guid
+                if (!fromCache)
+                {
+                    // retrieved from database, add it to cache
+                    // NOTE:  Assuming Redis LRU caching, see https://redis.io/topics/lru-cache
+                    // NOTE:  Alternatively, we could set an expiration time for entries
+                    await _cache.SetEntityAsync(_cachePrefix, info.Guid.ToString(), info);
+                }
+
+                return info.ToGuidInfo();
             }
         }
 
@@ -172,7 +186,6 @@ namespace Guid.Api.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(GuidApiError), (int)HttpStatusCode.NotFound)]
-        [ProducesResponseType(typeof(GuidApiError), (int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult> DeleteGuidInfoAsync(System.Guid id)
         {
             var infos = await _context.GuidInfos.GetAsync(i => i.Guid == id);
