@@ -20,12 +20,23 @@ namespace Guid.Api.Controllers
         private static readonly int _expireDays = 30;
         private static readonly string _cachePrefix = "guidinfo";
 
+        /// <summary>
+        /// Constructor.  Accepts dependency injected services.
+        /// </summary>
+        /// <param name="context">Repository pattern db context.</param>
+        /// <param name="cache">Redis cache wrapper.</param>
         public GuidInfosController(IGuidRepositoryContext context, IEntityCache<GuidInfoEntity> cache)
         {
             _context = context;
             _cache = cache;
         }
 
+        /// <summary>
+        /// Returns requested guid and its meta data.  Retrieves from Redis cache or database.
+        /// </summary>
+        /// <param name="id">The requested guid.</param>
+        /// <returns>The requested guid and its meta data.</returns>
+        /// <remarks>System.Guid accepts guids in 32 upper case, hex charater strings.</remarks>
         [HttpGet("{id}", Name = "GetGuidInfo")]
         [ProducesResponseType(typeof(GuidInfo), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(GuidApiError), (int)HttpStatusCode.NotFound)]
@@ -68,6 +79,11 @@ namespace Guid.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Generates a brand new guid with supplied meta data, and inserts it in the database.
+        /// </summary>
+        /// <param name="info">Guid meta data.</param>
+        /// <returns>The created guid and its meta data.</returns>
         [HttpPost]
         [ProducesResponseType(typeof(GuidInfo), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(GuidApiError), (int)HttpStatusCode.BadRequest)]
@@ -109,6 +125,13 @@ namespace Guid.Api.Controllers
             return date.AddTicks(-(date.Ticks % TimeSpan.TicksPerSecond));
         }
 
+        /// <summary>
+        /// Creates a guid entry if provided does not exist; otherwise, updates provided guid meta data.
+        /// </summary>
+        /// <param name="id">The guid to create or update.</param>
+        /// <param name="info">The guid meta data.</param>
+        /// <returns>The newly created or updated guid and its meta data.</returns>
+        /// <remarks>System.Guid accepts guids in 32 upper case, hex charater strings.</remarks>
         [HttpPost("{id}")]
         [ProducesResponseType(typeof(GuidInfo), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(GuidApiError), (int)HttpStatusCode.BadRequest)]
@@ -135,6 +158,11 @@ namespace Guid.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Removes a guid and its meta data from the database.
+        /// </summary>
+        /// <param name="id">The guid to delete.</param>
+        /// <returns>Success or failure status codes.</returns>
         [HttpDelete("{id}")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(GuidApiError), (int)HttpStatusCode.NotFound)]

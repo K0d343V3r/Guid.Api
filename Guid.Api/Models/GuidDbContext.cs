@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Guid.Api.Models
 {
+    /// <summary>
+    /// Entity framework database context for this service.
+    /// </summary>
     public class GuidDbContext : DbContext
     {
         public GuidDbContext(DbContextOptions<GuidDbContext> options)
@@ -17,6 +20,7 @@ namespace Guid.Api.Models
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            // make guid a unique index
             builder.Entity<GuidInfoEntity>()
                 .HasIndex(i => i.Guid)
                 .IsUnique();

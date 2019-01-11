@@ -47,7 +47,7 @@ namespace Guid.Api
 
             services.AddDistributedRedisCache(options =>
             {
-                options.Configuration = "localhost:6379"; //location of redis server
+                options.Configuration = "localhost:6379"; // location of redis server
             });
 
             // Add OpenAPI/Swagger document
@@ -71,8 +71,7 @@ namespace Guid.Api
             app.UseMvc();
 
             // Add OpenAPI/Swagger middlewares
-            app.UseSwagger(); // Serves the registered OpenAPI/Swagger documents by default on `/swagger/{documentName}/swagger.json`
-            //app.UseSwaggerUi3(); // Serves the Swagger UI 3 web ui to view the OpenAPI/Swagger documents by default on `/swagger`
+            app.UseSwagger(); // Serves the registered OpenAPI/Swagger documents by default on `/swagger/{documentName}/swagger.json`        
         }
     }
 }

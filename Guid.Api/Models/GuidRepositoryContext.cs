@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Guid.Api.Models
 {
+    /// <summary>
+    /// Repository pattern context for guid service entities.
+    /// </summary>
     public class GuidRepositoryContext : DbRepositoryContext, IGuidRepositoryContext
     {
         public IRepository<GuidInfoEntity> GuidInfos { get; private set; }

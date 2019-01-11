@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Guid.Api.Models
 {
     /// <summary>
-    /// Model for Guid and its meta data.
+    /// Database entity for a guid and its meta data.
     /// </summary>
     public class GuidInfoEntity : EntityBase, IUpdatable<GuidInfoBase>
     {
@@ -45,7 +45,9 @@ namespace Guid.Api.Models
         {
             return new GuidInfo()
             {
+                // Requirement: return as a 32-character string, all uppercase
                 Guid = Guid.ToString("N").ToUpper(),
+                // make sure we mark all our dates as UTC for correct JSON serialization.
                 Expire = new DateTime(Expire.Ticks, DateTimeKind.Utc),
                 User = User
             };

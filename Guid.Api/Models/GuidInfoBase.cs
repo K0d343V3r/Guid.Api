@@ -10,18 +10,18 @@ using System.Threading.Tasks;
 namespace Guid.Api.Models
 {
     /// <summary>
-    /// Base class for GuidInfo entity.
+    /// Base class for GuidInfo data transfer object (DTO).
     /// </summary>
     public class GuidInfoBase
     {
         /// <summary>
-        /// Expiration time for Guid.  Default is 30 days from time of creation.
+        /// Expiration time for Guid (serialized as UNIX time).
         /// </summary>
         [JsonConverter(typeof(UnixDateTimeConverter))]
         public DateTime? Expire { get; set; }
 
         /// <summary>
-        /// User associated with Guid.
+        /// User associated with guid.
         /// </summary>
         public string User { get; set; }
     }

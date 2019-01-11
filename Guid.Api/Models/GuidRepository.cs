@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace Guid.Api.Models
 {
+    /// <summary>
+    /// Repository for guid service entities.
+    /// </summary>
+    /// <typeparam name="T">The wrapper database entity.</typeparam>
     public class GuidRepository<T> : DbRepository<T> where T : EntityBase
     {
         public GuidRepository(GuidDbContext context)

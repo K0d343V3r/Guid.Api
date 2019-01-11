@@ -18,6 +18,7 @@ namespace Guid.Api
         {
             var host = CreateWebHostBuilder(args).Build();
 
+            // create initial database
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
