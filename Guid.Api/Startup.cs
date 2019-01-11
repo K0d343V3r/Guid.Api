@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Api.Common.Cache;
+﻿using Api.Common.Cache;
+using Api.Common.Time;
 using Guid.Api.Models;
+using Guid.Api.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace Guid.Api
@@ -42,6 +37,7 @@ namespace Guid.Api
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             // add dependency injected data services
+            services.AddScoped<ISystemClock, SystemClock>();
             services.AddScoped<IEntityCache<GuidInfoEntity>, RedisEntityCache<GuidInfoEntity>>();
             services.AddScoped<IGuidRepositoryContext, GuidRepositoryContext>();
 

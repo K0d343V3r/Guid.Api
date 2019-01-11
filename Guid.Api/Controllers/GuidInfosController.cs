@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Api.Common.Cache;
+using Api.Common.Time;
+using Guid.Api.Models;
+using Guid.Api.Services;
+using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Api.Common.Cache;
-using Guid.Api.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
 
 namespace Guid.Api.Controllers
 {
@@ -16,6 +16,7 @@ namespace Guid.Api.Controllers
     {
         private readonly IGuidRepositoryContext _context;
         private readonly IEntityCache<GuidInfoEntity> _cache;
+        private readonly ISystemClock _clock;
 
         private static readonly int _expireDays = 30;
         private static readonly string _cachePrefix = "guidinfo";
@@ -25,10 +26,15 @@ namespace Guid.Api.Controllers
         /// </summary>
         /// <param name="context">Repository pattern db context.</param>
         /// <param name="cache">Redis cache wrapper.</param>
-        public GuidInfosController(IGuidRepositoryContext context, IEntityCache<GuidInfoEntity> cache)
+        public GuidInfosController(
+            IGuidRepositoryContext context, 
+            IEntityCache<GuidInfoEntity> cache,
+            ISystemClock clock
+            )
         {
             _context = context;
             _cache = cache;
+            _clock = clock;
         }
 
         /// <summary>
@@ -60,7 +66,7 @@ namespace Guid.Api.Controllers
                     // entity does not exist
                     return NotFound(new GuidApiError(GuidErrorCode.GuidNotFound));
                 }
-                else if (infos[0].Expire >= DateTime.UtcNow)
+                else if (infos[0].Expire >= _clock.UtcNow)
                 {
                     // entity has not expired, cache it
                     await _cache.SetEntityAsync(_cachePrefix, id.ToString(), infos[0]);
@@ -119,7 +125,7 @@ namespace Guid.Api.Controllers
         private DateTime GetDefaultExpireDate()
         {
             // default is 30 days from now
-            var date = DateTime.UtcNow.AddDays(_expireDays);
+            var date = _clock.UtcNow.AddDays(_expireDays);
 
             // remove milliseconds since we are dealing with UNIX dates
             return date.AddTicks(-(date.Ticks % TimeSpan.TicksPerSecond));
