@@ -4,6 +4,9 @@ using System.Text;
 
 namespace Guid.Driver.Proxies
 {
+    /// <summary>
+    /// HttpClient singleton.
+    /// </summary>
     public class HttpClient : System.Net.Http.HttpClient
     {
         public static readonly HttpClient Instance = new HttpClient();

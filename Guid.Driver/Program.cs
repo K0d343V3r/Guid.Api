@@ -44,50 +44,13 @@ namespace Guid.Driver
         private async static Task DeleteGuidAsync()
         {
             Console.Write("Enter guid to delete: ");
-            if (!ReadGuid(out System.Guid? guid, false))
+            if (ReadGuid(out System.Guid? guid, false))
             {
-                return;
-            }
-
-            var proxy = new GuidInfosProxy(HttpClient.Instance);
-            try
-            {
-                await proxy.DeleteGuidInfoAsync(guid.Value);
-                Console.WriteLine("Successfully deleted.");
-            }
-            catch (GuidApiException<GuidApiError> ex)
-            {
-                DisplayError(ex, ex.Result);
-            }
-            catch (GuidApiException ex)
-            {
-                DisplayError(ex);
-            }
-        }
-
-        private async static Task UpdateGuidAsync()
-        {
-            Console.Write("Enter guid to update: ");
-            if (!ReadGuid(out System.Guid? guid, false))
-            {
-                return;
-            }
-            var info = new GuidInfoBase();
-            Console.Write("Enter user name: ");
-            info.User = Console.ReadLine();
-            Console.Write("Enter expiration date/time (mm/dd/yyyy hh/mm/ss): ");
-            if (!ReadDateTime(out DateTime? date))
-            {
-                return;
-            }
-            else
-            {
-                info.Expire = date;
                 var proxy = new GuidInfosProxy(HttpClient.Instance);
                 try
                 {
-                    var guidInfo = await proxy.CreateOrUpdateGuidInfoAsync(guid.Value, info);
-                    DisplayGuidInfo(guidInfo);
+                    await proxy.DeleteGuidInfoAsync(guid.Value);
+                    Console.WriteLine("Successfully deleted.");
                 }
                 catch (GuidApiException<GuidApiError> ex)
                 {
@@ -96,6 +59,36 @@ namespace Guid.Driver
                 catch (GuidApiException ex)
                 {
                     DisplayError(ex);
+                }
+            }
+        }
+
+        private async static Task UpdateGuidAsync()
+        {
+            Console.Write("Enter guid to update: ");
+            if (ReadGuid(out System.Guid? guid, false))
+            {
+                var info = new GuidInfoBase();
+                Console.Write("Enter user name: ");
+                info.User = Console.ReadLine();
+                Console.Write("Enter expiration date/time (mm/dd/yyyy hh/mm/ss): ");
+                if (ReadDateTime(out DateTime? date))
+                {
+                    info.Expire = date;
+                    var proxy = new GuidInfosProxy(HttpClient.Instance);
+                    try
+                    {
+                        var guidInfo = await proxy.CreateOrUpdateGuidInfoAsync(guid.Value, info);
+                        DisplayGuidInfo(guidInfo);
+                    }
+                    catch (GuidApiException<GuidApiError> ex)
+                    {
+                        DisplayError(ex, ex.Result);
+                    }
+                    catch (GuidApiException ex)
+                    {
+                        DisplayError(ex);
+                    }
                 }
             }
         }
@@ -103,51 +96,12 @@ namespace Guid.Driver
         private async static Task ReadGuidAsync()
         {
             Console.Write("Enter guid to read: ");
-            if (!ReadGuid(out System.Guid? guid, false))
+            if (ReadGuid(out System.Guid? guid, false))
             {
-                return;
-            }
-
-            var proxy = new GuidInfosProxy(HttpClient.Instance);
-            try
-            {
-                var guidInfo = await proxy.GetGuidInfoAsync(guid.Value);
-                DisplayGuidInfo(guidInfo);
-            }
-            catch (GuidApiException<GuidApiError> ex)
-            {
-                DisplayError(ex, ex.Result);
-            }
-            catch (GuidApiException ex)
-            {
-                DisplayError(ex);
-            }
-        }
-
-        private static async Task CreateGuidAsync()
-        {
-            var info = new GuidInfoBase();
-            Console.Write("Enter guid to create (skip generates new guid): ");
-            if (!ReadGuid(out System.Guid? guid))
-            {
-                return;
-            }
-            Console.Write("Enter user name: ");
-            info.User = Console.ReadLine();
-            Console.Write("Enter expiration date/time (mm/dd/yyyy hh/mm/ss) or skip for 30 day default: ");
-            if (!ReadDateTime(out DateTime? date))
-            {
-                return;
-            }
-            else
-            {
-                info.Expire = date;
                 var proxy = new GuidInfosProxy(HttpClient.Instance);
                 try
                 {
-                    var guidInfo = !guid.HasValue ?
-                        await proxy.CreateGuidInfoAsync(info) :
-                        await proxy.CreateOrUpdateGuidInfoAsync(guid.Value, info);
+                    var guidInfo = await proxy.GetGuidInfoAsync(guid.Value);
                     DisplayGuidInfo(guidInfo);
                 }
                 catch (GuidApiException<GuidApiError> ex)
@@ -157,6 +111,38 @@ namespace Guid.Driver
                 catch (GuidApiException ex)
                 {
                     DisplayError(ex);
+                }
+            }
+        }
+
+        private static async Task CreateGuidAsync()
+        {
+            var info = new GuidInfoBase();
+            Console.Write("Enter guid to create (skip generates new guid): ");
+            if (ReadGuid(out System.Guid? guid))
+            {
+                Console.Write("Enter user name: ");
+                info.User = Console.ReadLine();
+                Console.Write("Enter expiration date/time (mm/dd/yyyy hh/mm/ss) or skip for 30 day default: ");
+                if (ReadDateTime(out DateTime? date))
+                {
+                    info.Expire = date;
+                    var proxy = new GuidInfosProxy(HttpClient.Instance);
+                    try
+                    {
+                        var guidInfo = !guid.HasValue ?
+                            await proxy.CreateGuidInfoAsync(info) :
+                            await proxy.CreateOrUpdateGuidInfoAsync(guid.Value, info);
+                        DisplayGuidInfo(guidInfo);
+                    }
+                    catch (GuidApiException<GuidApiError> ex)
+                    {
+                        DisplayError(ex, ex.Result);
+                    }
+                    catch (GuidApiException ex)
+                    {
+                        DisplayError(ex);
+                    }
                 }
             }
         }
@@ -167,8 +153,10 @@ namespace Guid.Driver
             var input = Console.ReadLine();
             if (!string.IsNullOrWhiteSpace(input))
             {
-                if (DateTime.TryParse(input, out DateTime expire))
+                if (DateTime.TryParse(input, out DateTime expire) && 
+                    expire >= new DateTime(1970, 1, 1, 0, 0, 0))
                 {
+                    // must be compliant with UNIX date/times
                     date = expire;
                     return true;
                 }
@@ -190,7 +178,8 @@ namespace Guid.Driver
             {
                 return true;
             }
-            else if (!string.IsNullOrWhiteSpace(input) && System.Guid.TryParse(input, out System.Guid id))
+            else if (!string.IsNullOrWhiteSpace(input) && 
+                System.Guid.TryParse(input, out System.Guid id))
             {
                 guid = id;
                 return true;
