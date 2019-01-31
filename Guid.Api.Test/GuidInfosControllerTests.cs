@@ -70,7 +70,7 @@ namespace Guid.Api.Test
             // do not specify expiration date
             var infoBase = new GuidInfoBase()
             {
-                User = "Cylance, Inc."
+                User = "User 123"
             };
 
             // we are going to add to database
@@ -112,7 +112,7 @@ namespace Guid.Api.Test
             // use explicit expiration date
             var infoBase = new GuidInfoBase()
             {
-                User = "Cylance, Inc.",
+                User = "User 123",
                 Expire = new DateTime(2019, 2, 2, 2, 2, 2, DateTimeKind.Utc)
             };
 
@@ -198,7 +198,7 @@ namespace Guid.Api.Test
             var cachedEntity = new GuidInfoEntity()
             {
                 Guid = System.Guid.NewGuid(),
-                User = "Cylance, Inc.",
+                User = "User 123",
                 Expire = _now.AddDays(10)
             };
 
@@ -230,7 +230,7 @@ namespace Guid.Api.Test
             var dbEntity = new GuidInfoEntity()
             {
                 Guid = System.Guid.NewGuid(),
-                User = "Cylance, Inc.",
+                User = "User 123",
                 Expire = _now.AddDays(10)
             };
 
@@ -281,7 +281,7 @@ namespace Guid.Api.Test
             var cachedEntity = new GuidInfoEntity()
             {
                 Guid = System.Guid.NewGuid(),
-                User = "Cylance, Inc.",
+                User = "User 123",
                 Expire = _now.AddDays(-10)
             };
 
@@ -313,7 +313,7 @@ namespace Guid.Api.Test
             var dbEntity = new GuidInfoEntity()
             {
                 Guid = System.Guid.NewGuid(),
-                User = "Cylance, Inc.",
+                User = "User 123",
                 Expire = _now.AddDays(-10)
             };
 
@@ -353,7 +353,7 @@ namespace Guid.Api.Test
             System.Guid guid = System.Guid.NewGuid();
             var infoBase = new GuidInfoBase()
             {
-                User = "Cylance, Inc.",
+                User = "User 123",
                 Expire = new DateTime(2020, 2, 2, 2, 2, 2, DateTimeKind.Utc)
             };
 
@@ -401,7 +401,7 @@ namespace Guid.Api.Test
             var dbEntity = new GuidInfoEntity()
             {
                 Guid = System.Guid.NewGuid(),
-                User = "Cylance, Inc.",
+                User = "User 123",
                 Expire = new DateTime(2020, 2, 2, 2, 2, 2, DateTimeKind.Utc)
             };
 
@@ -482,7 +482,7 @@ namespace Guid.Api.Test
             var dbEntity = new GuidInfoEntity()
             {
                 Guid = System.Guid.NewGuid(),
-                User = "Cylance, Inc.",
+                User = "User 123",
                 Expire = new DateTime(2020, 2, 2, 2, 2, 2, DateTimeKind.Utc)
             };
 
