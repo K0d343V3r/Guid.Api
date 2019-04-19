@@ -7,7 +7,7 @@ namespace Guid.Driver
 {
     class Program
     {
-        private const int _exitOption = 10;
+        private const int _exitOption = 5;
 
         static async Task Main(string[] args)
         {
